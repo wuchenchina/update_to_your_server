@@ -148,11 +148,13 @@ fi
 check_remote_dependencies
 
 # 可選：清空遠端目錄 / Optional: clear original contents in remote directory
+# 排除 .user.ini：寶塔等環境常對該檔設 immutable / 特殊權限，rm 會報 Operation not permitted。
+# Skip .user.ini: Baota/panel sites often mark this file immutable; rm fails with "Operation not permitted".
 if [[ "$FULL_OVERWRITE_REMOTE_DIR" == true ]]; then
     echo -e "\033[36m🗑️  Clearing original contents in remote directory...\033[0m"
     REMOTE_DIR_QUOTED=$(printf '%q' "$REMOTE_DIR")
     if ! "${SSH_CMD[@]}" "${SERVER_USER}@${SERVER_IP}" \
-        "mkdir -p -- ${REMOTE_DIR_QUOTED} && find ${REMOTE_DIR_QUOTED} -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +"; then
+        "mkdir -p -- ${REMOTE_DIR_QUOTED} && find ${REMOTE_DIR_QUOTED} -mindepth 1 -maxdepth 1 ! -name '.user.ini' -exec rm -rf -- {} +"; then
         fail "Failed to clear remote directory. Please check connection info and directory permissions."
     fi
 else
